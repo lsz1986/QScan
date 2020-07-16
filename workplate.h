@@ -10,6 +10,7 @@
 
 #include "graphicsview.h"
 #include <QGraphicsScene>
+#include "graphicsitem.h"
 
 
 class workplate : public QWidget

@@ -123,6 +123,7 @@ workplate::workplate(QWidget *parent)
 	layoutBtn->addWidget(btnExit);
 	
 	graphicsView = new GraphicsView(this);
+	graphicsView->setStyleSheet("padding:2px;border:2px;");
 	graphicsView->setScene(&graphicsScene);
 	QVBoxLayout* layout = new QVBoxLayout;
 	layout->addLayout(layoutBtn);
@@ -145,7 +146,6 @@ workplate::workplate(QWidget *parent)
 	//connect(graphicsView, SIGNAL(statusUpdate(QString, QColor)), this, SLOT(handle_newConsoleText(QString, QColor)));
 	//connect(graphicsView, SIGNAL(zoomUpdate(QString)), this, SLOT(setGrid()));
 	//connect(&graphicsScene, SIGNAL(selectionChanged()), this, SLOT(handle_plotSceneSelectionChanged()));
-
 
 	connect(btnZoomActual, SIGNAL(clicked()), graphicsView, SLOT(zoomActual()));
 	connect(btnZoomFitAll, SIGNAL(clicked()), graphicsView, SLOT(zoomGraphicsItems()));
@@ -177,7 +177,8 @@ void workplate::on_btnCapture()
 
 void workplate::on_btnImport()
 {
-	graphicsScene.addRect(100, 100, 200, 200);
+	graphicsItem* item = new graphicsItem;
+	graphicsScene.addItem(item);
 }
 
 void workplate::on_btnSettings()
