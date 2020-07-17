@@ -14,11 +14,3 @@ QString MainStyle_Button = "QPushButton{background-color:white;color:white;borde
 
 
 
-
-
-
-
-
-
-
-

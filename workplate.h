@@ -10,8 +10,8 @@
 
 #include "graphicsview.h"
 #include <QGraphicsScene>
-#include "graphicsitem.h"
 
+#include <QMessageBox>
 
 class workplate : public QWidget
 {
@@ -28,19 +28,9 @@ private slots:
 	void on_btnSettings();
 	void on_btnWarp();
 	void on_btnProcess();
+	void on_btnTools();
 	void on_btnSave();
 	void on_btnExit();
-
-	void on_btnTools();
-	void on_FlipH();
-	void on_FlipV();
-	void on_RotR();
-	void on_RotL();
-	void on_ZoomActual();
-	void on_ZoomFitAll();
-	void on_ZoomFiltSelection();
-	void on_ZoomIn();
-	void on_ZoomOut();
 
 private:
 	QComboBox* comCamera;
@@ -61,14 +51,14 @@ private:
 	QPushButton* btnFlipV;
 	QPushButton* btnRotR;
 	QPushButton* btnRotL;
-	QPushButton* btnZoomActual;
-	QPushButton* btnZoomFitAll;
-	QPushButton* btnZoomFiltSelection;
+	QPushButton* btnZoomAdjust;
 	QPushButton* btnZoomIn;
 	QPushButton* btnZoomOut;
 
 	int m_nWidth;
 	int m_nHeight;
+
+	QMessageBox msgBox;
 };
 
 #endif // WORKPLATE_H

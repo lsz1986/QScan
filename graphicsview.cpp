@@ -1,18 +1,30 @@
 #include "graphicsview.h"
 
+#include <QDebug>
+
 GraphicsView::GraphicsView(QWidget *parent)
 	: QGraphicsView(parent)
 {
 
 }
 
+void GraphicsView::mousePressEvent(QMouseEvent *event)
+{
+
+}
+
+void GraphicsView::mouseMoveEvent(QMouseEvent *event)
+{
+
+	QPoint point = event->pos();
+	QRectF rect = this->sceneRect();
+
+	this->setSceneRect(-point.x(), -point.y(), rect.width(), rect.height());
+}
+
 void GraphicsView::mouseReleaseEvent(QMouseEvent *event)
 {
-	if (event->button() == Qt::LeftButton)
-	{
-		emit mouseReleased();
-	}
-	QGraphicsView::mouseReleaseEvent(event);
+
 }
 
 void GraphicsView::wheelEvent(QWheelEvent *event)
@@ -29,39 +41,27 @@ void GraphicsView::wheelEvent(QWheelEvent *event)
 	QGraphicsView::wheelEvent(event);
 }
 
-void GraphicsView::setGrid()
+void GraphicsView::viewFlipH()
 {
-	
+	scaleSelectedItems(-1, 1);
 }
 
-void GraphicsView::zoomActual()
+void GraphicsView::viewFlipV()
 {
-	// physicalDpi is the number of pixels in an inch
-	int xDpi = physicalDpiX();
-	int yDpi = physicalDpiY();
-	// Transforms
-	QTransform hpglToPx, viewFlip;
-	hpglToPx.scale(xDpi / 1016.0, yDpi / 1016.0);
-	viewFlip.scale(1, -1);
-
-	setTransform(hpglToPx * viewFlip);
-	setGrid();
-
-	emit statusUpdate("Scene scale set to 1:1", Qt::darkGreen);
-	emit zoomUpdate("Actual size");
+	scaleSelectedItems(1, -1);
 }
 
-void GraphicsView::zoomSceneRect()
+void GraphicsView::viewRotL()
 {
-	fitInView(
-		scene()->sceneRect(),
-		Qt::KeepAspectRatio);
-	setGrid();
-	emit statusUpdate("Scene scale set to view all", Qt::darkGreen);
-	emit zoomUpdate("Vinyl width");
+	rotateSelectedItems(-90);
 }
 
-void GraphicsView::zoomGraphicsItems()
+void GraphicsView::viewRotR()
+{
+	rotateSelectedItems(90);
+}
+
+void GraphicsView::zoomAdjust()
 {
 	QRectF newrect;
 
@@ -71,70 +71,25 @@ void GraphicsView::zoomGraphicsItems()
 	newrect.setHeight(0);
 
 	QList<QGraphicsItem*> itemList = items();
-	// type() = 10 -> QGraphicsItemGroup
-
-	for (int i = 0; i < itemList.length(); ++i)
+	if (itemList.size() <= 0)
 	{
-		QGraphicsItem * item = itemList.at(i);
-		if (item->type() == 10) // item is a qgraphicsitemgroup
-		{
-			QRectF compRect = item->boundingRect();
-			QPointF compPoint = item->pos();
+		return;
+	}
 
-			if ((compPoint.x() + compRect.width()) > newrect.width())
-			{
-				newrect.setWidth(compPoint.x() + compRect.width());
-			}
-			if ((compPoint.y() + compRect.height()) > newrect.height())
-			{
-				newrect.setHeight(compPoint.y() + compRect.height());
-			}
-		}
+	QGraphicsItem * item = itemList.at(0);
+	QRectF compRect = item->boundingRect();
+	QPointF compPoint = item->pos();
+
+	if ((compPoint.x() + compRect.width()) > newrect.width())
+	{
+		newrect.setWidth(compPoint.x() + compRect.width());
+	}
+	if ((compPoint.y() + compRect.height()) > newrect.height())
+	{
+		newrect.setHeight(compPoint.y() + compRect.height());
 	}
 
 	fitInView(newrect, Qt::KeepAspectRatio);
-	setGrid();
-
-	emit statusUpdate("Scene scale set to contain items", Qt::darkGreen);
-	emit zoomUpdate("Show all items");
-}
-
-void GraphicsView::zoomSelectedItems()
-{
-	QRectF newrect;
-
-	newrect.setX(0);
-	newrect.setY(0);
-	newrect.setWidth(0);
-	newrect.setHeight(0);
-
-	QList<QGraphicsItem*> itemList = items();
-	// type() = 10 -> QGraphicsItemGroup
-
-	for (int i = 0; i < itemList.length(); ++i)
-	{
-		QGraphicsItem * item = itemList.at(i);
-		if (item->type() == 10 && item->isSelected()) // item is a qgraphicsitemgroup
-		{
-			QRectF compRect = item->boundingRect();
-			QPointF compPoint = item->pos();
-
-			if ((compPoint.x() + compRect.width()) > newrect.width())
-			{
-				newrect.setWidth(compPoint.x() + compRect.width());
-			}
-			if ((compPoint.y() + compRect.height()) > newrect.height())
-			{
-				newrect.setHeight(compPoint.y() + compRect.height());
-			}
-		}
-	}
-
-	fitInView(newrect, Qt::KeepAspectRatio);
-	setGrid();
-
-	emit statusUpdate("Scene scale set to contain items", Qt::darkGreen);
-	emit zoomUpdate("Show all items");
 }
 
 void GraphicsView::zoomDelta(int delta)
@@ -143,9 +98,6 @@ void GraphicsView::zoomDelta(int delta)
 	QTransform scaleTransform;
 	scaleTransform.scale((1.0 + (5.0 / delta)), (1.0 + (5.0 / delta)));
 	setTransform(oldtransform * scaleTransform);
-	setGrid();
-	emit statusUpdate("Scene scale set to scroll wheel zoom.", Qt::darkGreen);
-	emit zoomUpdate("Custom");
 }
 
 void GraphicsView::zoomOut()
@@ -158,7 +110,41 @@ void GraphicsView::zoomIn()
 	zoomDelta(30);
 }
 
-void GraphicsView::statusUpdate(QString _consoleStatus)
+void GraphicsView::rotateSelectedItems(qreal rotation)
 {
-	emit statusUpdate(_consoleStatus, Qt::black);
+	QList<QGraphicsItem*> itemList = items();
+	if (itemList.size() <= 0)
+	{
+		return;
+	}
+	qreal translateWidth, translateheight, xOffset, yOffset;
+
+	QGraphicsItem * item = itemList.at(0);
+
+	xOffset = item->boundingRect().x();
+	yOffset = item->boundingRect().y();
+	translateWidth = item->boundingRect().width();
+	translateheight = item->boundingRect().height();
+	item->setTransformOriginPoint((translateWidth / 2.0) + xOffset, (translateheight / 2.0) + yOffset);
+	item->setRotation(item->rotation() + rotation);
+}
+
+void GraphicsView::scaleSelectedItems(qreal x, qreal y)
+{
+	QList<QGraphicsItem*> itemList = items();
+	if (itemList.size() <= 0)
+	{
+		return;
+	}
+
+	QTransform transform;
+	qreal translateWidth, translateheight;
+
+	QGraphicsItem * item = itemList.at(0);
+	translateWidth = item->boundingRect().width();
+	translateheight = item->boundingRect().height();
+	transform.translate(translateWidth / 2.0, translateheight / 2.0);
+	transform.scale(x, y);
+	transform.translate(-translateWidth / 2.0, -translateheight / 2.0);
+	item->setTransform(item->transform() * transform);
 }

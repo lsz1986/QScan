@@ -8,7 +8,3 @@ extern QString MainStyle_Button;
 
 
 
-
-
-
-

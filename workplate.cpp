@@ -4,10 +4,14 @@
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-
 #include <QApplication>
 #include <QDesktopWidget>
+
+#include <QFileDialog>
+
+
 #include <QRect>
+#include <QPixmap>
 
 #define BTN_WIDTH	25
 #define BTN_HEIGHT	25
@@ -64,15 +68,9 @@ workplate::workplate(QWidget *parent)
 	btnRotR = new QPushButton(groupTool);
 	btnRotR->setStyleSheet(MainStyle_Button + "QPushButton{border-image:url(images/icons/rotate_right.png)}");
 	btnRotR->setFixedSize(ICON_WIDTH, ICON_HEIGHT);
-	btnZoomActual = new QPushButton(groupTool);
-	btnZoomActual->setStyleSheet(MainStyle_Button + "QPushButton{border-image:url(images/icons/zoom_actual.png)}");
-	btnZoomActual->setFixedSize(ICON_WIDTH, ICON_HEIGHT);
-	btnZoomFitAll = new QPushButton(groupTool);
-	btnZoomFitAll->setStyleSheet(MainStyle_Button + "QPushButton{border-image:url(images/icons/zoom_fit_all.png)}");
-	btnZoomFitAll->setFixedSize(ICON_WIDTH, ICON_HEIGHT);
-	btnZoomFiltSelection = new QPushButton(groupTool);
-	btnZoomFiltSelection->setStyleSheet(MainStyle_Button + "QPushButton{border-image:url(images/icons/zoom_fit_selection.png)}");
-	btnZoomFiltSelection->setFixedSize(ICON_WIDTH, ICON_HEIGHT);
+	btnZoomAdjust = new QPushButton(groupTool);
+	btnZoomAdjust->setStyleSheet(MainStyle_Button + "QPushButton{border-image:url(images/icons/zoom_fit_selection.png)}");
+	btnZoomAdjust->setFixedSize(ICON_WIDTH, ICON_HEIGHT);
 	btnZoomIn = new QPushButton(groupTool);
 	btnZoomIn->setStyleSheet(MainStyle_Button + "QPushButton{border-image:url(images/icons/zoom_in.png)}");
 	btnZoomIn->setFixedSize(ICON_WIDTH, ICON_HEIGHT);
@@ -90,11 +88,7 @@ workplate::workplate(QWidget *parent)
 	layoutTool->addStretch();
 	layoutTool->addWidget(btnFlipV);
 	layoutTool->addStretch();
-	layoutTool->addWidget(btnZoomActual);
-	layoutTool->addStretch();
-	layoutTool->addWidget(btnZoomFitAll);
-	layoutTool->addStretch();
-	layoutTool->addWidget(btnZoomFiltSelection);
+	layoutTool->addWidget(btnZoomAdjust);
 	layoutTool->addStretch();
 	layoutTool->addWidget(btnZoomIn);
 	layoutTool->addStretch();
@@ -123,6 +117,7 @@ workplate::workplate(QWidget *parent)
 	layoutBtn->addWidget(btnExit);
 	
 	graphicsView = new GraphicsView(this);
+	graphicsView->show();
 	graphicsView->setStyleSheet("padding:2px;border:2px;");
 	graphicsView->setScene(&graphicsScene);
 	QVBoxLayout* layout = new QVBoxLayout;
@@ -147,9 +142,11 @@ workplate::workplate(QWidget *parent)
 	//connect(graphicsView, SIGNAL(zoomUpdate(QString)), this, SLOT(setGrid()));
 	//connect(&graphicsScene, SIGNAL(selectionChanged()), this, SLOT(handle_plotSceneSelectionChanged()));
 
-	connect(btnZoomActual, SIGNAL(clicked()), graphicsView, SLOT(zoomActual()));
-	connect(btnZoomFitAll, SIGNAL(clicked()), graphicsView, SLOT(zoomGraphicsItems()));
-	connect(btnZoomFiltSelection, SIGNAL(clicked()), graphicsView, SLOT(zoomSelectedItems()));
+	connect(btnFlipH, SIGNAL(clicked()), graphicsView, SLOT(viewFlipH()));
+	connect(btnFlipV, SIGNAL(clicked()), graphicsView, SLOT(viewFlipV()));
+	connect(btnRotL, SIGNAL(clicked()), graphicsView, SLOT(viewRotL()));
+	connect(btnRotR, SIGNAL(clicked()), graphicsView, SLOT(viewRotR()));
+	connect(btnZoomAdjust, SIGNAL(clicked()), graphicsView, SLOT(zoomAdjust()));
 	connect(btnZoomIn, SIGNAL(clicked()), graphicsView, SLOT(zoomIn()));
 	connect(btnZoomOut, SIGNAL(clicked()), graphicsView, SLOT(zoomOut()));
 
@@ -177,8 +174,27 @@ void workplate::on_btnCapture()
 
 void workplate::on_btnImport()
 {
-	graphicsItem* item = new graphicsItem;
-	graphicsScene.addItem(item);
+	QString fileName = QFileDialog::getOpenFileName(this, "Import image", "..", "Format(*.jpg *.png *.bmp)");
+	if (fileName.isEmpty())
+	{
+		msgBox.setText("Import image file failed!\n\nPlease Import image file again");
+		msgBox.exec();
+		return;
+	}
+
+	QList<QGraphicsItem*> itemList = graphicsView->items();
+	//if (itemList.size() > 0)
+	//{
+	//	for (int ix = 0; ix < itemList.size(); ix++)
+	//	{
+	//		QGraphicsItem* item = itemList.at(ix);
+	//		delete item;
+	//	}
+	//	itemList.clear();
+	//}
+	itemList.clear();
+	QPixmap pix(fileName);
+	graphicsScene.addPixmap(pix);
 }
 
 void workplate::on_btnSettings()
@@ -216,49 +232,4 @@ void workplate::on_btnTools()
 	{
 		groupTool->setVisible(true);
 	}
-}
-
-void workplate::on_FlipH()
-{
-
-}
-
-void workplate::on_FlipV()
-{
-
-}
-
-void workplate::on_RotR()
-{
-
-}
-
-void workplate::on_RotL()
-{
-
-}
-
-void workplate::on_ZoomActual()
-{
-
-}
-
-void workplate::on_ZoomFitAll()
-{
-
-}
-
-void workplate::on_ZoomFiltSelection()
-{
-
-}
-
-void workplate::on_ZoomIn()
-{
-
-}
-
-void workplate::on_ZoomOut()
-{
-
 }

@@ -8,6 +8,7 @@
 #include <QGraphicsItem>
 #include <QGraphicsItemGroup>
 
+#include <QMouseEvent>
 #include <QWheelEvent>
 
 class GraphicsView : public QGraphicsView
@@ -17,25 +18,28 @@ class GraphicsView : public QGraphicsView
 public:
 	explicit GraphicsView(QWidget *parent = 0);
 
-signals:
-	void mouseReleased();
-	void statusUpdate(QString text, QColor textColor);
-	void zoomUpdate(QString text);
-
 protected:
+	void mousePressEvent(QMouseEvent *event);
+	void mouseMoveEvent(QMouseEvent *event);
 	void mouseReleaseEvent(QMouseEvent *event);
 	void wheelEvent(QWheelEvent *event);
 
 public slots:
-	void setGrid();
-	void zoomActual();
-	void zoomSceneRect();
-	void zoomGraphicsItems();
-	void zoomSelectedItems();
+	void viewFlipH();
+	void viewFlipV();
+	void viewRotL();
+	void viewRotR();
+
+	void zoomAdjust();
 	void zoomDelta(int delta);
 	void zoomOut();
 	void zoomIn();
 
 private:
 	void statusUpdate(QString _consoleStatus);
+	void rotateSelectedItems(qreal rotation);
+	void scaleSelectedItems(qreal x, qreal y);
+
+private:
+	QPoint m_pOrigin;
 };
